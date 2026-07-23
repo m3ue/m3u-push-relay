@@ -97,7 +97,7 @@ None of the above ever needs to reach end users — it's split as:
 - `google-services.json` / `GoogleService-Info.plist` → bundled into the Flutter app builds (not secret, but keep out of a public repo anyway — see `m3u-tv` notes).
 - Service account JSON + APNs `.p8` key → stay in the Firebase console and this relay's Render Secret Files, never in a client build or a repo.
 
-## Deploying to Render (Phase 2)
+## Deploying to Render
 
 1. Push this repo to GitHub and connect it to Render as a **Web Service**
    (Docker runtime — it will use the included `Dockerfile`).
@@ -106,11 +106,4 @@ None of the above ever needs to reach end users — it's split as:
 3. Add a CNAME (e.g. `push.yourdomain.com`) → the Render hostname; Render
    issues TLS automatically once verified.
 4. (Optional) Point UptimeRobot at `/health` every 5 min if free-tier cold
-   starts (~30-50s) prove noticeable in practice — pushes are fired from a
-   queued Laravel job, so they're async and a cold start is normally invisible.
-
-## What's not here yet
-
-This repo covers Phase 1 (relay) + Phase 2 (deploy) of the plan. Phases 3-4
-(Laravel device-token storage/endpoint, Flutter client registration) live in
-`m3u-editor` and `m3u-tv` respectively and aren't part of this repo.
+   starts (~30-50s) prove noticeable in practice.
