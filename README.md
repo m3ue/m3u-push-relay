@@ -1,6 +1,6 @@
-# m3u-push-relay
+# m3u push relay
 
-Stateless push-notification relay for self-hosted [`m3u-editor`](../m3u-editor) instances.
+Stateless push-notification relay for self-hosted [`m3u-editor`](https://github.com/m3ue/m3u-editor) instances.
 
 **Mobile only** (phone/tablet builds of `m3u-tv`) — TV builds (Android TV,
 tvOS) don't use push.
