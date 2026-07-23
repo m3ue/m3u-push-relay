@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 m3u-push-relay - Main Entry Point
-Stateless APNs/FCM push relay for self-hosted m3u-editor instances.
+Stateless FCM (Firebase) push relay for self-hosted m3u-editor instances.
+Handles both Android and iOS mobile push; Apple delivery is bridged by
+Firebase using the APNs auth key uploaded in the Firebase console.
 """
 
 import logging
@@ -26,7 +28,6 @@ def main():
     logger.info("=" * 60)
     logger.info(f"Starting m3u-push-relay v{VERSION} on {settings.HOST}:{settings.PORT}")
     logger.info("=" * 60)
-    logger.info(f"APNs configured: {settings.apns_configured}")
     logger.info(f"FCM configured: {settings.fcm_configured}")
     if not settings.RELAY_SHARED_SECRET:
         logger.warning("RELAY_SHARED_SECRET is not set — /push is unauthenticated!")

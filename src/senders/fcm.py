@@ -13,7 +13,12 @@ _SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
 
 class FCMSender:
     """Sends notifications via the FCM HTTP v1 API, authenticating with a
-    service account JSON key.
+    Firebase service account JSON key.
+
+    Handles both Android and iOS: Apple delivery works because the APNs auth
+    key (.p8) is uploaded directly to the Firebase console for the iOS app,
+    so FCM bridges to APNs itself — this relay never touches APNs directly
+    or holds Apple credentials.
     """
 
     def __init__(self, service_account_path: str):
@@ -30,22 +35,32 @@ class FCMSender:
             self._credentials.refresh(GoogleAuthRequest())
         return self._credentials.token
 
-    async def send(self, device_token: str, title: str, body: str, data: Optional[Dict[str, str]] = None) -> str:
+    async def send(
+        self,
+        device_token: str,
+        title: str,
+        body: str,
+        platform: Optional[str] = None,
+        data: Optional[Dict[str, str]] = None,
+    ) -> str:
         access_token = await asyncio.to_thread(self._access_token)
 
         message = {
-            "message": {
-                "token": device_token,
-                "notification": {"title": title, "body": body},
-                "data": data or {},
-            }
+            "token": device_token,
+            "notification": {"title": title, "body": body},
+            "data": data or {},
         }
+        if platform == "ios":
+            message["apns"] = {"payload": {"aps": {"sound": "default"}}}
+        elif platform == "android":
+            message["android"] = {"priority": "high"}
+
         headers = {"Authorization": f"Bearer {access_token}"}
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
                 f"https://fcm.googleapis.com/v1/projects/{self.project_id}/messages:send",
-                json=message,
+                json={"message": message},
                 headers=headers,
             )
 

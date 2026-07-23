@@ -10,9 +10,7 @@ def client_with_secret():
 
     with patch("auth.settings") as mock_settings:
         mock_settings.RELAY_SHARED_SECRET = "test_secret_123"
-        with patch("api._build_apns_sender", return_value=None), patch(
-            "api._build_fcm_sender", return_value=None
-        ):
+        with patch("api._build_fcm_sender", return_value=None):
             with TestClient(app) as client:
                 yield client
 
@@ -23,9 +21,7 @@ def client_without_secret():
 
     with patch("auth.settings") as mock_settings:
         mock_settings.RELAY_SHARED_SECRET = None
-        with patch("api._build_apns_sender", return_value=None), patch(
-            "api._build_fcm_sender", return_value=None
-        ):
+        with patch("api._build_fcm_sender", return_value=None):
             with TestClient(app) as client:
                 yield client
 

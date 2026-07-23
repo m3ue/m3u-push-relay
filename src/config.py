@@ -22,14 +22,10 @@ class Settings(BaseSettings):
     # (only useful for local testing — never leave unset in production).
     RELAY_SHARED_SECRET: Optional[str] = None
 
-    # APNs (iOS/tvOS)
-    APNS_KEY_PATH: Optional[str] = None
-    APNS_KEY_ID: Optional[str] = None
-    APNS_TEAM_ID: Optional[str] = None
-    APNS_TOPIC: Optional[str] = None
-    APNS_USE_SANDBOX: bool = False
-
-    # FCM (Android)
+    # FCM (Firebase) — handles both Android and iOS delivery. iOS/APNs works
+    # because the APNs auth key (.p8) is uploaded directly to the Firebase
+    # console for the iOS app; this relay only ever holds the Firebase
+    # service account credential, never raw Apple credentials.
     FCM_SERVICE_ACCOUNT_PATH: Optional[str] = None
 
     model_config = SettingsConfigDict(
@@ -39,10 +35,6 @@ class Settings(BaseSettings):
         env_prefix="",
         extra="ignore",
     )
-
-    @property
-    def apns_configured(self) -> bool:
-        return bool(self.APNS_KEY_PATH and self.APNS_KEY_ID and self.APNS_TEAM_ID and self.APNS_TOPIC)
 
     @property
     def fcm_configured(self) -> bool:

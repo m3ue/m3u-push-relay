@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class PushRequest(BaseModel):
-    token: str = Field(..., min_length=1, description="Device push token (APNs or FCM)")
+    token: str = Field(..., min_length=1, description="Device FCM registration token")
     platform: Literal["ios", "android"]
     title: str = Field(..., min_length=1)
     body: str = Field(..., min_length=1)
@@ -18,7 +18,7 @@ class PushResponse(BaseModel):
 
 
 class PushSendError(Exception):
-    """Raised when a provider (APNs/FCM) rejects or fails to deliver a push."""
+    """Raised when FCM rejects or fails to deliver a push."""
 
     def __init__(self, message: str, status_code: int = 502):
         super().__init__(message)
