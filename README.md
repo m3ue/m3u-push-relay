@@ -3,7 +3,7 @@
 Stateless push-notification relay for self-hosted [`m3u-editor`](../m3u-editor) instances.
 
 **Mobile only** (phone/tablet builds of `m3u-tv`) — TV builds (Android TV,
-tvOS) don't use push; see `../PLAN_push_notifications.md` for rationale.
+tvOS) don't use push.
 
 Each self-hosted instance stores its own device token(s) and calls this relay's
 `POST /push` with `{token, platform, title, body}`. The relay forwards it to
