@@ -46,14 +46,16 @@ app = FastAPI(
 )
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD", "OPTIONS"])
 async def root():
     # Render's health check path defaults to "/" — this avoids a 404 there
     # causing Render to think the service is unhealthy and cycle it.
+    # Also accepts HEAD/OPTIONS since uptime monitors (e.g. UptimeRobot's
+    # classic HTTP(s) monitor) commonly probe with those instead of GET.
     return {"status": "healthy", "version": VERSION}
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD", "OPTIONS"])
 async def health():
     return {
         "status": "healthy",

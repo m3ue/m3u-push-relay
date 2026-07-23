@@ -40,6 +40,14 @@ class TestHealth:
         assert body["status"] == "healthy"
         assert body["fcm_configured"] is False
 
+    @pytest.mark.parametrize("path", ["/", "/health"])
+    @pytest.mark.parametrize("method", ["head", "options"])
+    def test_health_routes_accept_uptime_monitor_methods(self, client_no_provider, path, method):
+        # UptimeRobot's classic HTTP(s) monitor probes with HEAD (or OPTIONS in
+        # some configurations), not GET - both must not 405.
+        response = getattr(client_no_provider, method)(path)
+        assert response.status_code == 200
+
 
 class TestPushRouting:
     def test_ios_push_routes_through_fcm(self, client_with_fake_sender):
