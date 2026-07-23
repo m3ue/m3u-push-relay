@@ -1,9 +1,8 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 
-from auth import verify_shared_secret
 from config import VERSION, settings
 from models import PushRequest, PushResponse, PushSendError
 from rate_limit import RateLimiter
@@ -63,7 +62,7 @@ async def health():
     }
 
 
-@app.post("/push", dependencies=[Depends(verify_shared_secret)], response_model=PushResponse)
+@app.post("/push", response_model=PushResponse)
 async def push(request: PushRequest, http_request: Request):
     if not ip_rate_limiter.allow(_client_ip(http_request)):
         raise HTTPException(status_code=429, detail="Too many requests from this source — try again shortly")

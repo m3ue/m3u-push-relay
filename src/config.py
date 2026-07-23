@@ -18,14 +18,9 @@ class Settings(BaseSettings):
     REDOC_URL: str = "/redoc"
     OPENAPI_URL: str = "/openapi.json"
 
-    # Shared-secret auth for the /push endpoint. Leave unset to disable auth
-    # (only useful for local testing — never leave unset in production).
-    RELAY_SHARED_SECRET: Optional[str] = None
-
-    # Rate limits, independent of the shared secret above. Self-hosted apps
-    # that call this relay ship the secret in their own publicly-distributed
-    # source/images, so it can't be treated as truly private — these bound
-    # how much a "known" secret can be abused, regardless of who holds it.
+    # No shared-secret auth: self-hosted apps calling this relay ship any
+    # secret in their own publicly-distributed source/images, so it can't be
+    # kept private anyway. Rate limits are the actual abuse guard instead.
     RATE_LIMIT_PER_IP_PER_MINUTE: int = 60
     RATE_LIMIT_PER_TOKEN_PER_HOUR: int = 20
 
