@@ -29,8 +29,10 @@ def main():
     logger.info(f"Starting m3u-push-relay v{VERSION} on {settings.HOST}:{settings.PORT}")
     logger.info("=" * 60)
     logger.info(f"FCM configured: {settings.fcm_configured}")
-    if not settings.RELAY_SHARED_SECRET:
-        logger.warning("RELAY_SHARED_SECRET is not set — /push is unauthenticated!")
+    logger.info(
+        f"Rate limits: {settings.RATE_LIMIT_PER_IP_PER_MINUTE}/min per IP, "
+        f"{settings.RATE_LIMIT_PER_TOKEN_PER_HOUR}/hour per token"
+    )
 
     uvicorn.run(
         "api:app",
