@@ -34,6 +34,13 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+async def root():
+    # Render's health check path defaults to "/" — this avoids a 404 there
+    # causing Render to think the service is unhealthy and cycle it.
+    return {"status": "healthy", "version": VERSION}
+
+
 @app.get("/health")
 async def health():
     return {

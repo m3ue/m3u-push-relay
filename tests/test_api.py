@@ -8,8 +8,9 @@ from fastapi.testclient import TestClient
 def client_no_provider():
     from api import app
 
-    with patch("auth.settings") as mock_settings:
+    with patch("auth.settings") as mock_settings, patch("api.settings") as mock_api_settings:
         mock_settings.RELAY_SHARED_SECRET = None
+        mock_api_settings.fcm_configured = False
         with patch("api._build_fcm_sender", return_value=None):
             with TestClient(app) as client:
                 yield client
@@ -30,6 +31,11 @@ def client_with_fake_sender():
 
 
 class TestHealth:
+    def test_root_is_healthy_for_platform_health_checks(self, client_no_provider):
+        response = client_no_provider.get("/")
+        assert response.status_code == 200
+        assert response.json()["status"] == "healthy"
+
     def test_health_reports_provider_configuration(self, client_no_provider):
         response = client_no_provider.get("/health")
         assert response.status_code == 200
