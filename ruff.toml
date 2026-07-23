@@ -1,0 +1,8 @@
+[lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E501",  # line too long — not enforced
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["E402"]  # module-level imports not at top (sys.path manipulation)

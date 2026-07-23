@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+.venv/
+venv/
+env/
+
+.env
+.env.*
+!.env.example
+
+# Local copies of real secrets — never commit these
+secrets/*
+!secrets/.gitkeep
+
+.DS_Store
+.vscode/
+.idea/
