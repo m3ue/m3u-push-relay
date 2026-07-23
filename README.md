@@ -29,7 +29,12 @@ or Render health checks.
 
 ### `POST /push`
 
-Requires the `X-Relay-Secret` header to match `RELAY_SHARED_SECRET`.
+No auth header required. This relay ships inside a publicly-distributed
+open-source app, so any shared secret baked into it can't stay private —
+instead of a secret, abuse is bounded by rate limiting: per source IP
+(`RATE_LIMIT_PER_IP_PER_MINUTE`, default 60/min) and per device token
+(`RATE_LIMIT_PER_TOKEN_PER_HOUR`, default 20/hour). Both are in-memory
+(single-process) sliding windows — see `src/rate_limit.py`.
 
 ```json
 {
@@ -46,8 +51,8 @@ Android priority) — both platforms are sent through the same FCM call.
 
 Responses:
 - `200` — `{"sent": true, "platform": "ios", "provider_id": "..."}`
-- `401`/`403` — missing/invalid `X-Relay-Secret`
 - `422` — invalid request body (e.g. bad `platform`)
+- `429` — rate limit exceeded (per-IP or per-token)
 - `503` — FCM isn't configured on this relay
 - `502` — FCM rejected the push (e.g. bad/expired device token)
 
@@ -57,7 +62,7 @@ Responses:
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env       # fill in RELAY_SHARED_SECRET at minimum
+cp .env.example .env       # fill in FCM_SERVICE_ACCOUNT_PATH at minimum
 python main.py
 ```
 
@@ -74,8 +79,9 @@ All configuration is via environment variables (see `.env.example`):
 
 | Variable | Purpose |
 |---|---|
-| `RELAY_SHARED_SECRET` | Required header value (`X-Relay-Secret`) each m3u-editor instance must send. Generate with `openssl rand -hex 32`. |
 | `FCM_SERVICE_ACCOUNT_PATH` | Path to the Firebase service account JSON. Project ID is read from the file itself. |
+| `RATE_LIMIT_PER_IP_PER_MINUTE` | Max `/push` calls per source IP per minute. Default `60`. |
+| `RATE_LIMIT_PER_TOKEN_PER_HOUR` | Max `/push` calls per device token per hour. Default `20`. |
 
 ## Firebase project setup
 
@@ -95,12 +101,11 @@ None of the above ever needs to reach end users — it's split as:
 
 1. Push this repo to GitHub and connect it to Render as a **Web Service**
    (Docker runtime — it will use the included `Dockerfile`).
-2. Add `RELAY_SHARED_SECRET` as a normal environment variable.
-3. Add the Firebase service account JSON as a **Secret File** — Render mounts
+2. Add the Firebase service account JSON as a **Secret File** — Render mounts
    it at `/etc/secrets/<filename>`. Point `FCM_SERVICE_ACCOUNT_PATH` at that path.
-4. Add a CNAME (e.g. `push.yourdomain.com`) → the Render hostname; Render
+3. Add a CNAME (e.g. `push.yourdomain.com`) → the Render hostname; Render
    issues TLS automatically once verified.
-5. (Optional) Point UptimeRobot at `/health` every 5 min if free-tier cold
+4. (Optional) Point UptimeRobot at `/health` every 5 min if free-tier cold
    starts (~30-50s) prove noticeable in practice — pushes are fired from a
    queued Laravel job, so they're async and a cold start is normally invisible.
 
