@@ -1,14 +1,27 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 
 from auth import verify_shared_secret
 from config import VERSION, settings
 from models import PushRequest, PushResponse, PushSendError
+from rate_limit import RateLimiter
 from senders.fcm import FCMSender
 
 logger = logging.getLogger(__name__)
+
+ip_rate_limiter = RateLimiter(max_events=settings.RATE_LIMIT_PER_IP_PER_MINUTE, window_seconds=60)
+token_rate_limiter = RateLimiter(max_events=settings.RATE_LIMIT_PER_TOKEN_PER_HOUR, window_seconds=3600)
+
+
+def _client_ip(request: Request) -> str:
+    # Render/Cloudflare sit in front of this service - the direct peer is
+    # always the proxy, so prefer the original client from X-Forwarded-For.
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 def _build_fcm_sender() -> FCMSender | None:
@@ -51,7 +64,13 @@ async def health():
 
 
 @app.post("/push", dependencies=[Depends(verify_shared_secret)], response_model=PushResponse)
-async def push(request: PushRequest):
+async def push(request: PushRequest, http_request: Request):
+    if not ip_rate_limiter.allow(_client_ip(http_request)):
+        raise HTTPException(status_code=429, detail="Too many requests from this source — try again shortly")
+
+    if not token_rate_limiter.allow(request.token):
+        raise HTTPException(status_code=429, detail="Too many pushes to this device — try again shortly")
+
     sender = app.state.fcm_sender
     if sender is None:
         raise HTTPException(status_code=503, detail="FCM is not configured on this relay")

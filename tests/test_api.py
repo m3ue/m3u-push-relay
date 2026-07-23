@@ -79,6 +79,26 @@ class TestPushRouting:
         )
         assert response.status_code == 422
 
+    def test_push_returns_429_when_per_token_limit_exceeded(self, client_with_fake_sender, monkeypatch):
+        client, _ = client_with_fake_sender
+        import api
+
+        monkeypatch.setattr(api.token_rate_limiter, "max_events", 1)
+
+        payload = {"token": "rate-limited-token", "platform": "ios", "title": "T", "body": "B"}
+        assert client.post("/push", json=payload).status_code == 200
+        assert client.post("/push", json=payload).status_code == 429
+
+    def test_push_returns_429_when_per_ip_limit_exceeded(self, client_with_fake_sender, monkeypatch):
+        client, _ = client_with_fake_sender
+        import api
+
+        monkeypatch.setattr(api.ip_rate_limiter, "max_events", 1)
+
+        client.post("/push", json={"token": "tok-a", "platform": "ios", "title": "T", "body": "B"})
+        response = client.post("/push", json={"token": "tok-b", "platform": "ios", "title": "T", "body": "B"})
+        assert response.status_code == 429
+
     def test_push_propagates_provider_error_as_502(self, client_with_fake_sender):
         client, fake_fcm = client_with_fake_sender
         from models import PushSendError

@@ -22,6 +22,13 @@ class Settings(BaseSettings):
     # (only useful for local testing — never leave unset in production).
     RELAY_SHARED_SECRET: Optional[str] = None
 
+    # Rate limits, independent of the shared secret above. Self-hosted apps
+    # that call this relay ship the secret in their own publicly-distributed
+    # source/images, so it can't be treated as truly private — these bound
+    # how much a "known" secret can be abused, regardless of who holds it.
+    RATE_LIMIT_PER_IP_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_TOKEN_PER_HOUR: int = 20
+
     # FCM (Firebase) — handles both Android and iOS delivery. iOS/APNs works
     # because the APNs auth key (.p8) is uploaded directly to the Firebase
     # console for the iOS app; this relay only ever holds the Firebase

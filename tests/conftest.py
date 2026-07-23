@@ -9,6 +9,20 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
 
+@pytest.fixture(autouse=True)
+def _reset_rate_limiters():
+    """The /push rate limiters are module-level singletons (in-memory, no
+    shared store) - reset them around every test so usage in one test can't
+    trip limits in another."""
+    from api import ip_rate_limiter, token_rate_limiter
+
+    ip_rate_limiter._events.clear()
+    token_rate_limiter._events.clear()
+    yield
+    ip_rate_limiter._events.clear()
+    token_rate_limiter._events.clear()
+
+
 @pytest.fixture
 def fcm_service_account_file(tmp_path):
     """A throwaway service-account-shaped JSON file (unsigned, for path/parsing tests)."""
